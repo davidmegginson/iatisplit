@@ -1,7 +1,16 @@
 import xml.dom.pulldom
 import sys
+import argparse
 
 LIMIT = 5
+
+argsp = argparse.ArgumentParser(description="Split IATI activity files.")
+argsp.add_argument('--max-activities', '-n', required=True, type=int)
+argsp.add_argument('filenames_or_urls', nargs='*')
+args = argsp.parse_args()
+
+print(args.max_activities)
+exit()
 
 counter = 0
 
