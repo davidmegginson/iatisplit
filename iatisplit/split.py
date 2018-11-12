@@ -1,14 +1,28 @@
+#coding=UTF8
+"""Unit tests for the iatisplit.split module
+David Megginson
+October 2018
+
+License: Public Domain
+"""
+
 import xml.dom.pulldom
 import sys
 import re
 import argparse
+import logging
 
-def get_text(element_node):
-    return ''.join(node.nodeValue for node in element_node.childNodes if node.nodeType == node.TEXT_NODE)
+logger = logging.getLogger(__name__)
+
+ACTIVITY_DATE_TYPE_CODES = {
+    '1': 'start_planned',
+    '2': 'start_actual',
+    '3': 'end_planned',
+    '4': 'end_actual',
+}
 
 def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_only=False):
 
-    print(start_date)
     doc_counter = 0
     activity_counter = 0
     
@@ -29,8 +43,8 @@ def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_
             id_nodes = node.getElementsByTagName('iati-identifier')
             title_nodes = node.getElementsByTagName('title')
             date_nodes = node.getElementsByTagName('activity-date')
-            print('  ', get_text(id_nodes[0]))
-            print('  ', get_text(title_nodes[0].childNodes[0]))
+            print('  ', get_element_text(id_nodes[0]))
+            print('  ', get_element_text(title_nodes[0].childNodes[0]))
             if humanitarian_flag and humanitarian_flag.nodeValue:
                 print("  (humanitarian=" + humanitarian_flag.nodeValue + ")")
 
@@ -45,23 +59,42 @@ def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_
                 
             #print(node.toprettyxml(indent='  '))
 
-def main(args):
+def get_activity_dates(activity_node):
+    """Extract all of the dates in an IATI activity element.
+    @param activity_node: the iati-activity DOM element node.
+    @returns:
+    """
+    activity_dates = {}
+    date_nodes = activity_node.getElementsByTagName('activity-date')
+    for node in date_nodes:
+        date_type = get_attribute(node, 'type')
+        iso_date = get_attribute(node, 'iso-date')
+        if iso_date is None:
+            logger.warn("@iso_date attribute missing")
+            continue
+        if date_type not in ACTIVITY_DATE_TYPE_CODES:
+            continue
+        activity_dates[ACTIVITY_DATE_TYPE_CODES[date_type]] = iso_date
+    return activity_dates
+            
+def get_attribute(element_node, attribute_name, default_value=None):
+    """Extract an attribute value from an element node.
+    Does not fail if the attribute isn't present.
+    @param element_node: the DOM element node containing the attribute.
+    @param attribute_name: the name of the attribute.
+    @param default_value: the value to return if the attribute is unspecified.
+    @returns: the attribute value, or default_value (None) if it is unspecified.
+    """
+    node = element_node.attributes.get(attribute_name)
+    if node:
+        return node.value
+    else:
+        return default_value
+        
+def get_element_text(element_node):
+    """Extract and concatenate all text from an element node (but not its descendants).
+    @param element_node: the XML element containing the text
+    @returns: all of the text from the node, concatenated into a single string.
+    """
+    return ''.join(node.nodeValue for node in element_node.childNodes if node.nodeType == node.TEXT_NODE)
 
-    def parse_date(s):
-        if re.match('^\d{4}-\d{2}-\d{2}$', s):
-            return s
-        else:
-            raise Exception("Bad date format: {}".format(s))
-    
-    argsp = argparse.ArgumentParser(description="Split IATI activity files.")
-    argsp.add_argument('--max-activities', '-n', required=True, type=int)
-    argsp.add_argument('--start-date', '-s', required=False, default=None, type=parse_date)
-    argsp.add_argument('--end-date', '-e', required=False, default=None, type=parse_date)
-    argsp.add_argument('--humanitarian-only', '-H', required=False, default=False, type=bool)
-    argsp.add_argument('file_or_url', nargs='?')
-    args = argsp.parse_args()
-    run(args.file_or_url, args.max_activities, None, args.start_date, args.end_date, args.humanitarian_only)
-    
-
-if __name__ == '__main__':
-    main(sys.argv)

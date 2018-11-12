@@ -1,0 +1,8 @@
+<iati-activities>
+  <iati-activity>
+    <activity-date type="1" iso-date="2017-01-01"/>
+    <activity-date type="2" iso-date="2017-02-01"/>
+    <activity-date type="3" iso-date="2017-11-30"/>
+    <activity-date type="4" iso-date="2017-12-31"/>
+  </iati-activity>
+</iati-activities>
