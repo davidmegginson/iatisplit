@@ -41,12 +41,12 @@ def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_
 
         # filter out non-humanitarian activities if requested
         if humanitarian_only and not is_humanitarian(node):
-            logger.info("Skipping activity %s (no humanitarian marker)", iati_id)
+            logger.debug("Skipping activity %s (no humanitarian marker)", iati_id)
             continue
 
         # filter out activities not in the date range if requested
         if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
-            logger.info("Skipping activity %s (dates out of range)", iati_id)
+            logger.debug("Skipping activity %s (dates out of range)", iati_id)
             continue
 
         if activity_counter >= max:
