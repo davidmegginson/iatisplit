@@ -1,4 +1,4 @@
-from split import run
+from iatisplit.split import run
 import sys, argparse
 
 def main(args):
@@ -17,8 +17,10 @@ def main(args):
     argsp.add_argument('file_or_url', nargs='?')
     args = argsp.parse_args()
     run(args.file_or_url, args.max_activities, None, args.start_date, args.end_date, args.humanitarian_only)
-    
+
+def exec():
+    main(sys.argv)
 
 if __name__ == '__main__':
-    main(sys.argv)
+    exec()
 

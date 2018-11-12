@@ -14,5 +14,10 @@ setup(
     author_email='contact@megginson.com',
     install_requires=[''],
     packages=['iatisplit'],
-    test_suite='tests'
+    test_suite='tests',
+    entry_points = {
+        "console_scripts": [
+            "iatisplit = iatisplit.__main__:exec"
+        ]
+    }
 )
