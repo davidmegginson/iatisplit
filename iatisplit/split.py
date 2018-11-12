@@ -39,23 +39,32 @@ def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_
                 activity_counter += 1
 
             doc.expandNode(node)
-            humanitarian_flag = node.attributes.get('humanitarian')
-            id_nodes = node.getElementsByTagName('iati-identifier')
+            iati_id = get_text(node.getElementsByTagname('iati-identifier')[0])
+            humanitarian_flag = get_attribute(node, 'humanitarian')
             title_nodes = node.getElementsByTagName('title')
             if humanitarian_flag and humanitarian_flag.nodeValue:
                 print("  (humanitarian=" + humanitarian_flag.nodeValue + ")")
 
-            if start_date or end_date:
-                activity_dates = get_activity_dates(nodes)
-                if start_date and ("start_planned" in activity_dates or "start_actual" in activity_dates):
-                    if not (activity_dates.get("start_planned") <= start_date or activity_dates.get("start_actual") <= start_date):
-                        continue
-                if end_date and ("end_planned" in activity_dates or "end_actual" in activity_dates):
-                    if not (activity_dates.get("end_planned") >= start_date or activity_dates.get("end_actual") >= start_date):
-                        continue
-                print(activity_dates)
+            if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
+                logger.info("Skipping activity %s (dates out of range)", iati_id)
+                continue
                 
             #print(node.toprettyxml(indent='  '))
+
+def is_humanitarian(activity_node):
+    """Check if an activity is flagged as humanitarian.
+    @param activity_node: the iati-activity DOM element node.
+    @returns: True if the humanitarian marker is set on the iati-activity element or any transaction child.
+    """
+    # first try the iati-activity element
+    if get_attribute(activity_node, "humanitarian") == "1":
+        return True
+    # next, try the transactions
+    transaction_nodes = activity_node.getElementsByTagName("transaction")
+    for transaction_node in transaction_nodes:
+        if get_attribute(transaction_node, "humanitarian") == "1":
+            return True
+    return False
 
 def check_dates_in_range(activity_dates, start_date=None, end_date=None):
     """Check that an activity's dates fall into the allowed range.

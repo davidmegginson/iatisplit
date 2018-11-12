@@ -16,22 +16,39 @@ import xml.dom.minidom
 class TestSplit(unittest.TestCase):
 
     def test_get_element_text_simple(self):
-        node = xml.dom.minidom.parseString("<narrative>abcde</narrative>").getElementsByTagName("narrative")[0]
+        node = _xml_string("<narrative>abcde</narrative>", "narrative")
         self.assertEqual("abcde", iatisplit.split.get_element_text(node))
 
     def test_get_element_text_multiple_nodes(self):
         """Read text across an element-node break."""
-        node = xml.dom.minidom.parseString("<narrative>abc<foo/>de</narrative>").getElementsByTagName("narrative")[0]
+        node = _xml_string("<narrative>abc<foo/>de</narrative>", "narrative")
         self.assertEqual("abcde", iatisplit.split.get_element_text(node))
 
     def test_get_attribute_simple(self):
-        node = xml.dom.minidom.parseString("<narrative xml:lang=\"fr\">abcde</narrative>").getElementsByTagName("narrative")[0]
+        node = _xml_string("<narrative xml:lang=\"fr\">abcde</narrative>", "narrative")
         self.assertEqual("fr", iatisplit.split.get_attribute(node, "xml:lang"))
 
     def test_get_attribute_default(self):
         "Return default value if attribute not specified."""
-        node = xml.dom.minidom.parseString("<narrative>abcde</narrative>").getElementsByTagName("narrative")[0]
+        node = _xml_string("<narrative>abcde</narrative>", "narrative")
         self.assertEquals("xxxxx", iatisplit.split.get_attribute(node, "xml:lang", "xxxxx"))
+
+    def test_is_humanitarian_activity(self):
+        # no marker
+        node = _xml_string("<iati-activity></iati-activity>", "iati-activity")
+        self.assertFalse(iatisplit.split.is_humanitarian(node))
+        # marker
+        node = _xml_string("<iati-activity humanitarian=\"1\"></iati-activity>", "iati-activity")
+        self.assertTrue(iatisplit.split.is_humanitarian(node))
+
+    def test_is_humanitarian_transaction(self):
+        # no marker
+        node = _xml_string("<iati-activity><transaction/><transaction/><transaction/></iati-activity>", "iati-activity")
+        self.assertFalse(iatisplit.split.is_humanitarian(node))
+        # marker
+        node = _xml_string("<iati-activity><transaction/><transaction humanitarian=\"1\"/><transaction/></iati-activity>", "iati-activity")
+        self.assertTrue(iatisplit.split.is_humanitarian(node))
+
 
     def test_get_activity_dates(self):
         EXPECTED = {
