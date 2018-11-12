@@ -43,6 +43,45 @@ class TestSplit(unittest.TestCase):
         activity_dates = iatisplit.split.get_activity_dates(node)
         self.assertEquals(EXPECTED, activity_dates)
 
+    def test_check_dates_in_range_planned(self):
+        DATES = {
+            "start_planned": "2018-01-01",
+            "end_planned": "2018-12-31",
+        }
+        # no limits specified
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, None, None))
+        # start date only
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, "2017-07-01", None))
+        self.assertFalse(iatisplit.split.check_dates_in_range(DATES, "2019-07-01", None))
+        # end date only
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, None, "2019-07-01"))
+        self.assertFalse(iatisplit.split.check_dates_in_range(DATES, None, "2017-07-01"))
+        # overlaps start date
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, "2017-07-01", "2018-06-30"))
+        # overlaps end date
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, "2018-07-01", "2019-06-30"))
+        # no overlap
+        self.assertFalse(iatisplit.split.check_dates_in_range(DATES, "2017-01-01", "2017-12-31"))
+        self.assertFalse(iatisplit.split.check_dates_in_range(DATES, "2019-01-01", "2019-12-31"))
+
+    def test_check_dates_in_range_actual(self):
+        DATES = {
+            "start_planned": "2018-01-01",
+            "start_actual": "2018-07-01",
+            "end_planned": "2018-12-31",
+            "end_actual": "2019-06-30",
+        }
+        # no limits specified
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, None, None))
+        # in range with actual dates but not planned
+        self.assertTrue(iatisplit.split.check_dates_in_range(DATES, "2019-01-01", "2019-12-31"))
+        # in range with planned dates but not actual
+        self.assertFalse(iatisplit.split.check_dates_in_range(DATES, "2017-07-01", "2018-06-30"))
+
+#
+# Utility functions
+#
+
 def _xml_string(string, element_name=None, element_index=0):
     """Parse an XML string to DOM node(s).
     @param string: a string containing XML markup.
