@@ -24,32 +24,39 @@ ACTIVITY_DATE_TYPE_CODES = {
 def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_only=False):
 
     doc_counter = 0
-    activity_counter = 0
+    activity_counter = max # force a new output file for the first activity
     
     doc = xml.dom.pulldom.parse(file_or_url)
 
-    print("Starting output file {}".format(doc_counter))
     for event, node in doc:
-        if event == xml.dom.pulldom.START_ELEMENT and node.tagName == 'iati-activity':
-            if activity_counter >= max:
-                activity_counter = 0
-                doc_counter += 1
-                print("Starting output file {}".format(doc_counter))
-            else:
-                activity_counter += 1
+        if event != xml.dom.pulldom.START_ELEMENT or node.tagName != 'iati-activity':
+            continue;
 
-            doc.expandNode(node)
-            iati_id = get_text(node.getElementsByTagname('iati-identifier')[0])
-            humanitarian_flag = get_attribute(node, 'humanitarian')
-            title_nodes = node.getElementsByTagName('title')
-            if humanitarian_flag and humanitarian_flag.nodeValue:
-                print("  (humanitarian=" + humanitarian_flag.nodeValue + ")")
+        # read the rest of this iati-activity element
+        doc.expandNode(node)
 
-            if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
-                logger.info("Skipping activity %s (dates out of range)", iati_id)
-                continue
-                
-            #print(node.toprettyxml(indent='  '))
+        # get the iati-identifier (for logging)
+        iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
+        logger.debug("Checking activity %s", iati_id)
+
+        # filter out non-humanitarian activities if requested
+        if humanitarian_only and not is_humanitarian(node):
+            logger.info("Skipping activity %s (no humanitarian marker)", iati_id)
+            continue
+
+        # filter out activities not in the date range if requested
+        if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
+            logger.info("Skipping activity %s (dates out of range)", iati_id)
+            continue
+
+        if activity_counter >= max:
+            activity_counter = 0
+            doc_counter += 1
+            logger.info("Starting output file %d", doc_counter)
+        else:
+            activity_counter += 1
+
+        #print(node.toprettyxml(indent='  '))
 
 def is_humanitarian(activity_node):
     """Check if an activity is flagged as humanitarian.
@@ -103,9 +110,10 @@ def get_activity_dates(activity_node):
         date_type = get_attribute(node, 'type')
         iso_date = get_attribute(node, 'iso-date')
         if iso_date is None:
-            logger.warn("@iso_date attribute missing")
+            logger.error("@iso_date attribute missing")
             continue
         if date_type not in ACTIVITY_DATE_TYPE_CODES:
+            logger.error("Unrecognised activity-date/@type %s", date_type)
             continue
         activity_dates[ACTIVITY_DATE_TYPE_CODES[date_type]] = iso_date
     return activity_dates
