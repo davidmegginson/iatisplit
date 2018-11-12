@@ -26,14 +26,14 @@ def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_
     doc_counter = 0
     activity_counter = max # force a new output file for the first activity
     
-    doc = xml.dom.pulldom.parse(file_or_url)
+    document_node = xml.dom.pulldom.parse(file_or_url)
 
-    for event, node in doc:
+    for event, node in document_node:
         if event != xml.dom.pulldom.START_ELEMENT or node.tagName != 'iati-activity':
             continue;
 
         # read the rest of this iati-activity element
-        doc.expandNode(node)
+        document_node.expandNode(node)
 
         # get the iati-identifier (for logging)
         iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
