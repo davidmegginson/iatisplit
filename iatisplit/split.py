@@ -7,9 +7,6 @@ License: Public Domain
 """
 
 import xml.dom.pulldom
-import sys
-import re
-import argparse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,7 +18,7 @@ ACTIVITY_DATE_TYPE_CODES = {
     '4': 'end_actual',
 }
 
-def run(file_or_url, max, dir=".", start_date=None, end_date=None, humanitarian_only=False):
+def run(file_or_url, max, output_dir=".", start_date=None, end_date=None, humanitarian_only=False):
 
     doc_counter = 0
     activity_counter = max # force a new output file for the first activity
