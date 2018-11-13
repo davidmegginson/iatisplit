@@ -6,7 +6,7 @@ October 2018
 License: Public Domain
 """
 
-import xml.dom.pulldom
+import xml.dom.pulldom, os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,10 @@ def run(file_or_url, max, output_dir=".", start_date=None, end_date=None, humani
             continue
 
 def start_file(output_dir, doc_counter, activities_node):
+    filename = os.path.join(output_dir, "iatiout-{:04d}.xml".format(doc_counter))
+    print(filename)
     logger.info("Starting output file %d", doc_counter)
+    
     #print(dir(output_dir))
     #print(output_dir + "/output" + str(doc_counter) + ".xml")
     #print(activities_node.toxml())
