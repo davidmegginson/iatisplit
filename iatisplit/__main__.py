@@ -14,11 +14,39 @@ def main(args):
     logging.basicConfig(level=logging.INFO)
     
     argsp = argparse.ArgumentParser(description="Split IATI activity files.")
-    argsp.add_argument('--max-activities', '-n', required=True, type=int)
-    argsp.add_argument('--start-date', '-s', required=False, default=None, type=parse_date)
-    argsp.add_argument('--end-date', '-e', required=False, default=None, type=parse_date)
-    argsp.add_argument('--humanitarian-only', '-H', required=False, default=False, type=bool)
-    argsp.add_argument('file_or_url', nargs='?')
+    argsp.add_argument(
+        '--max-activities', '-n',
+        required=True,
+        type=int,
+        metavar="NUMBER",
+        help="Maximum number of IATI activities to include in each output file."
+    )
+    argsp.add_argument(
+        '--start-date', '-s',
+        required=False,
+        default=None,
+        type=parse_date,
+        metavar="YYYY-MM-DD",
+        help="Include only activities in progress on or after this date."
+    )
+    argsp.add_argument(
+        '--end-date', '-e',
+        required=False,
+        default=None,
+        type=parse_date,
+        metavar="YYYY-MM-DD",
+        help="Include only activities in progress on or before this date."
+    )
+    argsp.add_argument(
+        '--humanitarian-only', '-H',
+        action='store_const',
+        const=True,
+        help="Include only activities with the IATI humanitarian marker."
+    )
+    argsp.add_argument(
+        'file_or_url',
+        help="URL or local filename of an IATI activity file."
+    )
     args = argsp.parse_args()
     run(args.file_or_url, args.max_activities, None, args.start_date, args.end_date, args.humanitarian_only)
 
