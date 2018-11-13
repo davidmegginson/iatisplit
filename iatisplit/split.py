@@ -23,37 +23,54 @@ def run(file_or_url, max, output_dir=".", start_date=None, end_date=None, humani
     doc_counter = 0
     activity_counter = max # force a new output file for the first activity
     
-    document_node = xml.dom.pulldom.parse(file_or_url)
+    events = xml.dom.pulldom.parse(file_or_url)
+    activities_node = None
 
-    for event, node in document_node:
-        if event != xml.dom.pulldom.START_ELEMENT or node.tagName != 'iati-activity':
-            continue;
+    # iterate through the document, stopping on every iati-activity element
+    for event, node in events:
 
-        # read the rest of this iati-activity element
-        document_node.expandNode(node)
-
-        # get the iati-identifier (for logging)
-        iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
-        logger.debug("Checking activity %s", iati_id)
-
-        # filter out non-humanitarian activities if requested
-        if humanitarian_only and not is_humanitarian(node):
-            logger.debug("Skipping activity %s (no humanitarian marker)", iati_id)
+        if event != xml.dom.pulldom.START_ELEMENT:
             continue
 
-        # filter out activities not in the date range if requested
-        if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
-            logger.debug("Skipping activity %s (dates out of range)", iati_id)
+        if node.tagName == 'iati-activities':
+            activities_node = node
             continue
 
-        if activity_counter >= max:
-            activity_counter = 0
-            doc_counter += 1
-            logger.info("Starting output file %d", doc_counter)
-        else:
-            activity_counter += 1
+        elif node.tagName == 'iati-activity':
 
-        #print(node.toprettyxml(indent='  '))
+            # read the rest of this iati-activity element
+            events.expandNode(node)
+
+            # get the iati-identifier (for logging)
+            iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
+            logger.debug("Checking activity %s", iati_id)
+
+            # filter out non-humanitarian activities if requested
+            if humanitarian_only and not is_humanitarian(node):
+                logger.debug("Skipping activity %s (no humanitarian marker)", iati_id)
+                continue
+
+            # filter out activities not in the date range if requested
+            if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
+                logger.debug("Skipping activity %s (dates out of range)", iati_id)
+                continue
+
+            if activity_counter >= max:
+                activity_counter = 0
+                doc_counter += 1
+                start_file(output_dir, doc_counter, activities_node)
+            else:
+                activity_counter += 1
+
+            #print(node.toxml())
+            continue
+
+def start_file(output_dir, doc_counter, activities_node):
+    logger.info("Starting output file %d", doc_counter)
+    #print(dir(output_dir))
+    #print(output_dir + "/output" + str(doc_counter) + ".xml")
+    #print(activities_node.toxml())
+    
 
 def is_humanitarian(activity_node):
     """Check if an activity is flagged as humanitarian.
@@ -118,7 +135,7 @@ def get_activity_dates(activity_node):
 #
 # Low-level DOM utility functions
 #
-            
+
 def get_element_text(element_node):
     """Extract and concatenate all text from an element node (but not its descendants).
     @param element_node: the XML element containing the text

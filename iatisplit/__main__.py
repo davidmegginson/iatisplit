@@ -48,7 +48,7 @@ def main(args):
         help="URL or local filename of an IATI activity file."
     )
     args = argsp.parse_args()
-    run(args.file_or_url, args.max_activities, None, args.start_date, args.end_date, args.humanitarian_only)
+    run(args.file_or_url, args.max_activities, ".", args.start_date, args.end_date, args.humanitarian_only)
 
 def exec():
     main(sys.argv)
