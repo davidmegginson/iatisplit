@@ -47,6 +47,8 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
     # Start the XML parser
     events = xml.dom.pulldom.parse(file_or_url)
 
+    output_stub = make_stub(output_stub, file_or_url)
+
     try:
 
         # iterate through the document, stopping on every iati-activity element
@@ -92,7 +94,7 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
                     activity_counter = 0
                     doc_counter += 1
                     current_output = end_file(current_output)
-                    current_output = start_file(output_dir, "iatiout", doc_counter, activities_node)
+                    current_output = start_file(output_dir, output_stub, doc_counter, activities_node)
                 else:
                     activity_counter += 1
 
@@ -106,6 +108,30 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
     finally:
         # if there's an output file in progress, always close it (even after an exception)
         current_output = end_file(current_output)
+
+
+def make_stub(output_stub, file_or_url):
+    """Figure out the appropriate output-filename stub.
+    @param output_stub: the stub explicitly requested by the user (or None).
+    @param file_or_url: the filename or URL for the IATI activity file that we're splitting.
+    """
+
+    # if the user has already specified one, use it
+    if output_stub:
+        return output_stub
+
+    # if the file part seems to end with an .xml extension, strip it then go
+    result = re.search(r'([^\\/]+)(\.[xX][mM][lL])(\?.*)?$', file_or_url)
+    if result:
+        return result.group(1)
+
+    # take what looks like the file part
+    result = re.search(r'([^\\/]+)(\?.*)?$', file_or_url)
+    if result:
+        return result.group(1)
+
+    # we give up! use "iatiout"
+    return "iatiout"
 
 
 def start_file(output_dir, output_stub, doc_counter, activities_node):
@@ -150,6 +176,7 @@ def end_file(current_output):
         current_output.close()
     return None
 
+
 def is_humanitarian(activity_node):
     """Check if an activity is flagged as humanitarian.
     @param activity_node: the iati-activity DOM element node.
@@ -164,6 +191,7 @@ def is_humanitarian(activity_node):
         if get_attribute(transaction_node, "humanitarian") == "1":
             return True
     return False
+
 
 def check_dates_in_range(activity_dates, start_date=None, end_date=None):
     """Check that an activity's dates fall into the allowed range.
@@ -190,6 +218,7 @@ def check_dates_in_range(activity_dates, start_date=None, end_date=None):
                 return False
     return True
 
+
 def get_activity_dates(activity_node):
     """Extract all of the dates in an IATI activity element node.
     @param activity_node: the iati-activity DOM element node.
@@ -209,6 +238,7 @@ def get_activity_dates(activity_node):
         activity_dates[ACTIVITY_DATE_TYPE_CODES[date_type]] = iso_date
     return activity_dates
 
+
 #
 # Low-level DOM utility functions
 #
@@ -219,6 +249,7 @@ def get_element_text(element_node):
     @returns: all of the text from the node, concatenated into a single string.
     """
     return ''.join(node.nodeValue for node in element_node.childNodes if node.nodeType == node.TEXT_NODE)
+
 
 def get_attribute(element_node, attribute_name, default_value=None):
     """Extract an attribute value from an element node.
@@ -234,4 +265,5 @@ def get_attribute(element_node, attribute_name, default_value=None):
     else:
         return default_value
         
+
 # end of module
