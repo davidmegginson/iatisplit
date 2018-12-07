@@ -15,35 +15,36 @@ $ iatisplit -n 100 input-data.xml
 The only required option is --max-activities / -n.
 
 --max-activities <num> / -n <num>
-  Required. Maximum number of IATI activities to include in each output file.
+
+Required. Maximum number of IATI activities to include in each output file.
   
 --output-directory <dir> / -d <dir>
-  Output directory for split IATI documents (defaults to ".", which
-  may fail on non-Unix systems).
+
+Output directory for split IATI documents (defaults to ".", which may fail on non-Unix systems). The directory must already exist. iatisplit will overwrite existing files in the directory.
   
 --output-stub <filename> / -o <filename>
-  Base filename for all output files (tries to guess from filename/URL
-  if not provided)
+
+Base filename for all output files (tries to guess from filename/URL if not provided)
   
 --start-date <YYYY-MM-DD> / -s <YYYY-MM-DD>
-  Include only IATI activities that start on or after this date. Uses
-  the actual start date if present, then falls back to the planned
-  start date.
+
+Include only IATI activities that start on or after this date. Uses the actual start date if present, then falls back to the planned start date.
   
 --end-date <YYYY-MM-DD> / - e <YYYY-MM-DD>
-  Include only IATI activities that end on or before this date. Uses
-  the actual end date if present, then falls back to the planned end
-  date.
+
+Include only IATI activities that end on or before this date. Uses the actual end date if present, then falls back to the planned end date.
   
 --humanitarian-only / -h
-  Include only IATI activities with the humanitarian marker on the
-  activity or one of its transactions (IATI 2.02 and above).
+
+Include only IATI activities with the humanitarian marker on the activity or one of its transactions (IATI 2.02 and above).
   
 --verbose
-  Include a lot of debugging information about processing.
+
+Include a lot of debugging information about processing.
   
 --quiet
-  Print only error messages.
+
+Print only error messages.
   
 
 ## Output
