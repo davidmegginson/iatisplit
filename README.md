@@ -14,23 +14,23 @@ $ iatisplit -n 100 input-data.xml
 
 The only required option is --max-activities / -n.
 
---max-activities <num> / -n <num>
+--max-activities _num_ / -n _num_
 
 Required. Maximum number of IATI activities to include in each output file.
   
---output-directory <dir> / -d <dir>
+--output-directory _dir_ / -d _dir_
 
 Output directory for split IATI documents (defaults to ".", which may fail on non-Unix systems). The directory must already exist. iatisplit will overwrite existing files in the directory.
   
---output-stub <filename> / -o <filename>
+--output-stub _filename_ / -o _filename_
 
 Base filename for all output files (tries to guess from filename/URL if not provided)
   
---start-date <YYYY-MM-DD> / -s <YYYY-MM-DD>
+--start-date _YYYY-MM-DD_ / -s _YYYY-MM-DD_
 
 Include only IATI activities that start on or after this date. Uses the actual start date if present, then falls back to the planned start date.
   
---end-date <YYYY-MM-DD> / - e <YYYY-MM-DD>
+--end-date _YYYY-MM-DD_ / - e _YYYY-MM-DD_
 
 Include only IATI activities that end on or before this date. Uses the actual end date if present, then falls back to the planned end date.
   
