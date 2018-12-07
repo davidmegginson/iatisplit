@@ -6,10 +6,12 @@ October 2018
 License: Public Domain
 """
 
-import xml.dom.pulldom, os
-import logging
+import logging, os, re, xml.dom.pulldom
+
 
 logger = logging.getLogger(__name__)
+"""Logger for this module"""
+
 
 ACTIVITY_DATE_TYPE_CODES = {
     '1': 'start_planned',
@@ -17,63 +19,136 @@ ACTIVITY_DATE_TYPE_CODES = {
     '3': 'end_planned',
     '4': 'end_actual',
 }
+"""Embed this IATI codelist, since it's critical for operations."""
 
-def run(file_or_url, max, output_dir=".", start_date=None, end_date=None, humanitarian_only=False):
 
-    doc_counter = 0
+def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, end_date=None, humanitarian_only=False):
+    """Split an IATI activity report into multiple output documents.
+    Start/end date filters use actual dates if present, then fall back to planned dates.
+    Uses PullDOM so that it will not exhaust memory with large input documents.
+    @param file_or_url: the file path or web URL of the IATI activity report.
+    @param max: the maximum number of IATI activities to include in each output document.
+    @param output_dir: the path to the output directory (defaults to ".").
+    @param start_date: if present, include only activities with a start date on or after this date. Requires ISO format YYYY-MM-DD (e.g. "2018-12-01") (defaults to None).
+    @param end_date: if present, include only activities with an end date on or before this date. Requires ISO format YYYY-MM-DD (e.g. "2019-11-30") (defaults to None).
+    @param humanitarian_only: if True, include only IATI activities that contain a humanitarian marker (defaults to False).
+    """
+
+    doc_counter = 0 # count output documents
     activity_counter = max # force a new output file for the first activity
-    
-    events = xml.dom.pulldom.parse(file_or_url)
+
+    # pointer to the top-level iati-activities node
+    # (will be reproduced in each output file)
     activities_node = None
 
-    # iterate through the document, stopping on every iati-activity element
-    for event, node in events:
+    # pointer to the current output stream
+    current_output = None
 
-        if event != xml.dom.pulldom.START_ELEMENT:
-            continue
+    # Start the XML parser
+    events = xml.dom.pulldom.parse(file_or_url)
 
-        if node.tagName == 'iati-activities':
-            activities_node = node
-            continue
+    try:
 
-        elif node.tagName == 'iati-activity':
+        # iterate through the document, stopping on every iati-activity element
+        for event, node in events:
 
-            # read the rest of this iati-activity element
-            events.expandNode(node)
-
-            # get the iati-identifier (for logging)
-            iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
-            logger.debug("Checking activity %s", iati_id)
-
-            # filter out non-humanitarian activities if requested
-            if humanitarian_only and not is_humanitarian(node):
-                logger.debug("Skipping activity %s (no humanitarian marker)", iati_id)
+            # if it's not the start of an element, we don't care
+            if event != xml.dom.pulldom.START_ELEMENT:
                 continue
 
-            # filter out activities not in the date range if requested
-            if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
-                logger.debug("Skipping activity %s (dates out of range)", iati_id)
+            # if it's the top-level iati-activities node, save a copy
+            if node.tagName == 'iati-activities':
+                activities_node = node
                 continue
 
-            if activity_counter >= max:
-                activity_counter = 0
-                doc_counter += 1
-                start_file(output_dir, doc_counter, activities_node)
-            else:
-                activity_counter += 1
+            # this is where the fun happens
+            # we want to parse all of the iati-activity into a single DOM branch,
+            # and then print it out to the current file if appropriate; that way,
+            # we never hold more than one activity in memory at once.
+            elif node.tagName == 'iati-activity':
 
-            #print(node.toxml())
-            continue
+                # read the rest of this iati-activity element
+                events.expandNode(node)
 
-def start_file(output_dir, doc_counter, activities_node):
-    filename = os.path.join(output_dir, "iatiout-{:04d}.xml".format(doc_counter))
-    print(filename)
-    logger.info("Starting output file %d", doc_counter)
-    
-    #print(dir(output_dir))
-    #print(output_dir + "/output" + str(doc_counter) + ".xml")
-    #print(activities_node.toxml())
-    
+                # get the iati-identifier (for logging)
+                iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
+                logger.debug("Checking activity %s", iati_id)
+
+                # filter out non-humanitarian activities (if requested)
+                if humanitarian_only and not is_humanitarian(node):
+                    logger.debug("Skipping activity %s (no humanitarian marker)", iati_id)
+                    continue
+
+                # filter out activities not in the date range (if requested)
+                if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
+                    logger.debug("Skipping activity %s (dates out of range)", iati_id)
+                    continue
+
+                # SUCCESS! if we make it to here, then we want to include the activity in our output
+
+                # if the current output document is maxed out, start a new one;
+                # otherwise, advance the counter
+                if activity_counter >= max:
+                    activity_counter = 0
+                    doc_counter += 1
+                    current_output = end_file(current_output)
+                    current_output = start_file(output_dir, "iatiout", doc_counter, activities_node)
+                else:
+                    activity_counter += 1
+
+                # write the activity XML to the current output file and continue
+                # XXX Kludge alert! Combining XML output and string appending
+                # (to keep indentation neat)
+                current_output.write("  " + node.toxml() + "\n")
+
+                continue
+
+    finally:
+        # if there's an output file in progress, always close it (even after an exception)
+        current_output = end_file(current_output)
+
+
+def start_file(output_dir, output_stub, doc_counter, activities_node):
+    """Start a new output file.
+    Will open a new XML document and add the start of the iati-activities element.
+    @param output_dir: path to the output directory
+    @param output_stub: the filename stub for each file (e.g. "iatiout")
+    @param doc_counter: current value of the output document counter (1-based)
+    @param activities_node: the top-level iati-activities node, for reproduction in each output file
+    @returns: a pointer to the open file (for writing individual activities)
+    """
+    # construct the new filename
+    filename = os.path.join(output_dir, "{}.{:04d}.xml".format(output_stub, doc_counter))
+
+    # start the file
+    logger.info("Starting output file %s", filename)
+    output = open(filename, 'w')
+
+    # write the XML declaration
+    output.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+
+    # write the iati-activities start tag
+    # XXX Kludge alert! Changing an empty element to a start tag by string replacement (blech!).
+    # If the Python DOM string representation of an empty element changes in the future,
+    # this could break.
+    output.write(re.sub(r'/>$', ">\n", activities_node.toxml()))
+
+    # return the new file pointer for writing
+    return output
+
+
+def end_file(current_output):
+    """End an output file.
+    This is smart enough to do nothing if current_output is None.
+    @param current_output: the current file output (or None).
+    @returns: None, to represent the closed stream.
+    """
+    if current_output:
+        # write the iati-activities end tag
+        current_output.write("</iati-activities>\n")
+        # close the output
+        current_output.close()
+    return None
 
 def is_humanitarian(activity_node):
     """Check if an activity is flagged as humanitarian.
@@ -98,7 +173,6 @@ def check_dates_in_range(activity_dates, start_date=None, end_date=None):
     @param start_date: the start date in ISO 8601 format (YYYY-MM-DD), or None for no start limit.
     @param end_date: the end date in ISO 8601 format (YYYY-MM-DD), or None for no end limit.
     @returns: True if the activity is in range (or can't be determined).
-    @see: get_activity_dates
     """
     if start_date:
         if "end_actual" in activity_dates:
@@ -119,7 +193,7 @@ def check_dates_in_range(activity_dates, start_date=None, end_date=None):
 def get_activity_dates(activity_node):
     """Extract all of the dates in an IATI activity element node.
     @param activity_node: the iati-activity DOM element node.
-    @returns:
+    @returns: a dict of dates found.
     """
     activity_dates = {}
     date_nodes = activity_node.getElementsByTagName('activity-date')
@@ -160,3 +234,4 @@ def get_attribute(element_node, attribute_name, default_value=None):
     else:
         return default_value
         
+# end of module

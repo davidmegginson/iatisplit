@@ -2,6 +2,24 @@
 
 This is a Python command-line utility that allows splitting [IATI Activity files](http://reference.iatistandard.org/activity-standard/overview/activity-file/) into smaller chunks, limiting the maximum number of activities in each file.
 
+## Usage
+
+Split into files containing a maximum of 100 activities each:
+
+```
+$ iatisplit -n 100 input-data.xml
+```
+
+## Output
+
+The output will appear in a number of files in the current working directory, each with an additional 3-digit number before the original extension. For example, splitting the input file ``input-data.xml`` will produce the following output files
+
+* input-data.001.xml
+* input-data.002.xml
+* input-data.003.xml
+
+etc.
+
 ## Requirements
 
 Requires Python3.
@@ -31,24 +49,6 @@ or (if you have both Python2 and Python3 on your system)
 ```
 $ python3 setup.py install
 ```
-
-## Usage
-
-Split into files containing a maximum of 100 activities each:
-
-```
-$ iatisplit -n 100 input-data.xml
-```
-
-## Output
-
-The output will appear in a number of files in the current working directory, each with an additional 3-digit number before the original extension. For example, splitting the input file ``input-data.xml`` will produce the following output files
-
-* input-data.001.xml
-* input-data.002.xml
-* input-data.003.xml
-
-etc.
 
 ## Source code and bug reporting
 
