@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 def main(args):
     """Entry point for a script.
-    @args: a list of command-line arguments.
+    Note that argparse expects the script name (sys.args[0]) to be removed,
+    so provide only the args themselves, not the traditional ARGV[0].
+    @args: a list of command-line arguments
     """
     
     def parse_date(s):

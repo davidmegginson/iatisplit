@@ -1,0 +1,10 @@
+2019-01-02 Release 0.2
+	- add support for opening URLs
+	- add requirements.txt
+	- fix supplying a custom arglist to __main__.main()
+	- add unit tests for scripting level
+	- add large test file (public data from USAID)
+	- add long_description in setup.py for PyPi
+
+2018-12-07 Release 0.1
+	- initial public release

@@ -1,4 +1,3 @@
-#coding=UTF8
 """Unit tests for the iatisplit.split module
 David Megginson
 October 2018
@@ -6,7 +5,8 @@ October 2018
 License: Public Domain
 """
 
-import logging, os, re, xml.dom.pulldom
+import logging, os, re, requests, xml.dom.pulldom
+from iatisplit.requests_wrapper import RequestsResponseIOWrapper
 
 
 logger = logging.getLogger(__name__)
@@ -45,8 +45,19 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
     current_output = None
 
     # Start the XML parser
-    events = xml.dom.pulldom.parse(file_or_url)
+    if re.match(r'^https?://', file_or_url, flags=re.IGNORECASE):
+        # kludgey test for a URL
+        response = requests.get(file_or_url, stream=True)
+        # we do this so that we don't have to load the whole thing as a string
+        # (in case it's big)
+        input = RequestsResponseIOWrapper(response)
+        events = xml.dom.pulldom.parse(input)
+    else:
+        # just a local file
+        # xml.dom.pulldom.parse won't close the file resource, so expect a warning
+        events = xml.dom.pulldom.parse(file_or_url)
 
+    # figure out the filename stub
     output_stub = make_stub(output_stub, file_or_url)
 
     try:
@@ -264,6 +275,6 @@ def get_attribute(element_node, attribute_name, default_value=None):
         return node.value
     else:
         return default_value
-        
+
 
 # end of module

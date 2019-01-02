@@ -18,22 +18,34 @@ class TestScript(unittest.TestCase):
     """High-level script tests."""
 
     def setUp(self):
-        self.filename = _resolve_path("iati-activities-Afghanistan.xml")
         self.output_directory = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.output_directory)
 
     def test_open_file(self):
+        filename = _resolve_path("iati-activities-Afghanistan.xml")
         args = [
             "-n", "200",
             "-d", self.output_directory,
-            self.filename
+            filename
         ]
         main.main(args)
+        self.assertTrue("iati-activities-Afghanistan.0001.xml" in os.listdir(self.output_directory))
+        self.assertTrue("iati-activities-Afghanistan.0010.xml" in os.listdir(self.output_directory))
+        self.assertFalse("iati-activities-Afghanistan.0011.xml" in os.listdir(self.output_directory))
 
     def test_open_url(self):
-        pass
+        url = "https://github.com/davidmegginson/iatisplit/blob/master/tests/files/iati-activities-Afghanistan.xml?raw=true"
+        args = [
+            "-n", "200",
+            "-d", self.output_directory,
+            url
+        ]
+        main.main(args)
+        self.assertTrue("iati-activities-Afghanistan.0001.xml" in os.listdir(self.output_directory))
+        self.assertTrue("iati-activities-Afghanistan.0010.xml" in os.listdir(self.output_directory))
+        self.assertFalse("iati-activities-Afghanistan.0011.xml" in os.listdir(self.output_directory))
 
 
 class TestSplit(unittest.TestCase):
@@ -55,7 +67,7 @@ class TestSplit(unittest.TestCase):
     def test_get_attribute_default(self):
         "Return default value if attribute not specified."""
         node = _xml_string("<narrative>abcde</narrative>", "narrative")
-        self.assertEquals("xxxxx", iatisplit.split.get_attribute(node, "xml:lang", "xxxxx"))
+        self.assertEqual("xxxxx", iatisplit.split.get_attribute(node, "xml:lang", "xxxxx"))
 
     def test_is_humanitarian_activity(self):
         # no marker
@@ -82,7 +94,7 @@ class TestSplit(unittest.TestCase):
             'end_actual': '2017-12-31'}
         node = _xml_file("iati-activities-simple.xml", "iati-activity")
         activity_dates = iatisplit.split.get_activity_dates(node)
-        self.assertEquals(EXPECTED, activity_dates)
+        self.assertEqual(EXPECTED, activity_dates)
 
     def test_check_dates_in_range_planned(self):
         DATES = {
