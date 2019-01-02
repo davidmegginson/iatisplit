@@ -7,13 +7,37 @@ License: Public Domain
 """
 
 import unittest
-
-import iatisplit.split
+import os, tempfile, shutil
+import iatisplit.__main__ as main, iatisplit.split
 
 import os
 import xml.dom.minidom
 
+
+class TestScript(unittest.TestCase):
+    """High-level script tests."""
+
+    def setUp(self):
+        self.filename = _resolve_path("iati-activities-Afghanistan.xml")
+        self.output_directory = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.output_directory)
+
+    def test_open_file(self):
+        args = [
+            "-n", "200",
+            "-d", self.output_directory,
+            self.filename
+        ]
+        main.main(args)
+
+    def test_open_url(self):
+        pass
+
+
 class TestSplit(unittest.TestCase):
+    """Low-level functional tests."""
 
     def test_get_element_text_simple(self):
         node = _xml_string("<narrative>abcde</narrative>", "narrative")
@@ -98,6 +122,10 @@ class TestSplit(unittest.TestCase):
 #
 # Utility functions
 #
+
+def _resolve_path(filename):
+    """Resolve a pathname for a test input file."""
+    return os.path.join(os.path.dirname(__file__), "files", filename)
 
 def _xml_string(string, element_name=None, element_index=0):
     """Parse an XML string to DOM node(s).
