@@ -23,7 +23,7 @@ class TestScript(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_directory)
 
-    def test_open_file(self):
+    def Xtest_open_file(self):
         filename = _resolve_path("iati-activities-Afghanistan.xml")
         args = [
             "-n", "200",
@@ -35,7 +35,7 @@ class TestScript(unittest.TestCase):
         self.assertTrue("iati-activities-Afghanistan.0010.xml" in os.listdir(self.output_directory))
         self.assertFalse("iati-activities-Afghanistan.0011.xml" in os.listdir(self.output_directory))
 
-    def test_open_url(self):
+    def Xtest_open_url(self):
         url = "https://github.com/davidmegginson/iatisplit/blob/master/tests/files/iati-activities-Afghanistan.xml?raw=true"
         args = [
             "-n", "200",
@@ -48,7 +48,7 @@ class TestScript(unittest.TestCase):
         self.assertFalse("iati-activities-Afghanistan.0011.xml" in os.listdir(self.output_directory))
 
 
-class TestSplit(unittest.TestCase):
+class TestFunctions(unittest.TestCase):
     """Low-level functional tests."""
 
     def test_get_element_text_simple(self):
@@ -95,6 +95,16 @@ class TestSplit(unittest.TestCase):
         node = _xml_file("iati-activities-simple.xml", "iati-activity")
         activity_dates = iatisplit.split.get_activity_dates(node)
         self.assertEqual(EXPECTED, activity_dates)
+
+    def test_get_transaction_dates(self):
+        EXPECTED = {
+            "1": ['2017-01-15'],
+            "2": ['2017-01-16', '2017-01-17'],
+            "3": ['2017-01-18']
+        }
+        node = _xml_file("iati-activities-simple.xml", "iati-activity")
+        transaction_dates = iatisplit.split.get_transaction_dates(node)
+        self.assertEqual(EXPECTED, transaction_dates)
 
     def test_check_dates_in_range_planned(self):
         DATES = {

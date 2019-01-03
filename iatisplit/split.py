@@ -84,7 +84,10 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
                 events.expandNode(node)
 
                 # get the iati-identifier (for logging)
-                iati_id = get_element_text(node.getElementsByTagName('iati-identifier')[0])
+                iati_id = get_iati_identifier(activity_node)
+                if iati_id is None:
+                    logger.error("Skipping activity with no iati-identifier")
+                    continue
                 logger.debug("Checking activity %s", iati_id)
 
                 # filter out non-humanitarian activities (if requested)
@@ -188,6 +191,18 @@ def end_file(current_output):
     return None
 
 
+def get_identifier(activity_node):
+    """Get the IATI identifier for an activity.
+    @param activity_node: the DOM node containing the activity.
+    @returns: the identifier, or None if the element doesn't exist
+    """
+    node = get_first_child(activity_node, "iati-identifier")
+    if node is None:
+        return None
+    else:
+        return get_element_text(node)
+
+
 def is_humanitarian(activity_node):
     """Check if an activity is flagged as humanitarian.
     @param activity_node: the iati-activity DOM element node.
@@ -250,9 +265,42 @@ def get_activity_dates(activity_node):
     return activity_dates
 
 
+def get_transaction_dates(activity_node):
+    """Extract all of the transaction dates in an IATI activity element node.
+    @param activity_node: the iati-activity DOM element node.
+    @returns: a dict of dates found.
+    """
+    transaction_dates = {}
+    transaction_nodes = activity_node.getElementsByTagName('transaction')
+    for transaction_node in transaction_nodes:
+        node = get_first_child(transaction_node, "transaction-type")
+        if node:
+            transaction_type = get_attribute(node, "code")
+        else:
+            logger.error("Type missing for transaction in activity %s", get_iati_identifier(activity_node))
+            continue
+        node = get_first_child(transaction_node, "transaction-date")
+        if node:
+            transaction_date = get_attribute(node, "iso-date")
+        else:
+            logger.error("Date missing for transaction in activity %s", get_iati_identifier(activity_node))
+        if transaction_type in transaction_dates:
+            transaction_dates[transaction_type].append(transaction_date)
+        else:
+            transaction_dates[transaction_type] = [transaction_date]
+    return transaction_dates
+
 #
 # Low-level DOM utility functions
 #
+
+def get_first_child(node, name):
+    child_nodes = node.getElementsByTagName(name)
+    if len(child_nodes) == 0:
+        return None
+    else:
+        return child_nodes[0]
+            
 
 def get_element_text(element_node):
     """Extract and concatenate all text from an element node (but not its descendants).

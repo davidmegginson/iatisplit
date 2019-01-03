@@ -4,5 +4,21 @@
     <activity-date type="2" iso-date="2017-02-01"/>
     <activity-date type="3" iso-date="2017-11-30"/>
     <activity-date type="4" iso-date="2017-12-31"/>
+    <transaction>
+      <transaction-type code="1"/>
+      <transaction-date iso-date="2017-01-15"/>
+    </transaction>
+    <transaction>
+      <transaction-type code="2"/>
+      <transaction-date iso-date="2017-01-16"/>
+    </transaction>
+    <transaction>
+      <transaction-type code="2"/>
+      <transaction-date iso-date="2017-01-17"/>
+    </transaction>
+    <transaction>
+      <transaction-type code="3"/>
+      <transaction-date iso-date="2017-01-18"/>
+    </transaction>
   </iati-activity>
 </iati-activities>
