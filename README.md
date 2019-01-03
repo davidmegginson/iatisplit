@@ -38,6 +38,18 @@ Include only IATI activities that end on or before this date. Uses the actual en
 
 Include only IATI activities with the humanitarian marker on the activity or one of its transactions (IATI 2.02 and above).
   
+--transaction-type _type_
+
+Include only activities with at least one transaction of the specified type.
+
+--transaction-start-date _YYYY-MM-DD_
+
+Include only activities with at least one transaction on or after the specified date.
+
+--transaction-end-date _YYYY-MM-DD_
+
+Include only activities with at least one transaction before or on the specified date.
+
 --verbose
 
 Include a lot of debugging information about processing.

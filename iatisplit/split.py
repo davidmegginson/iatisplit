@@ -22,7 +22,10 @@ ACTIVITY_DATE_TYPE_CODES = {
 """Embed this IATI codelist, since it's critical for operations."""
 
 
-def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, end_date=None, humanitarian_only=False):
+def split(
+        file_or_url, max, output_dir=".", output_stub=None, start_date=None, end_date=None, humanitarian_only=False,
+        transaction_type=None, transaction_start_date=None, transaction_end_date=None
+):
     """Split an IATI activity report into multiple output documents.
     Start/end date filters use actual dates if present, then fall back to planned dates.
     Uses PullDOM so that it will not exhaust memory with large input documents.
@@ -31,6 +34,9 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
     @param output_dir: the path to the output directory (defaults to ".").
     @param start_date: if present, include only activities with a start date on or after this date. Requires ISO format YYYY-MM-DD (e.g. "2018-12-01") (defaults to None).
     @param end_date: if present, include only activities with an end date on or before this date. Requires ISO format YYYY-MM-DD (e.g. "2019-11-30") (defaults to None).
+    @param transaction_type: if present, include only activities with a transaction of this type. Uses the IATI transaction codelist.
+    @param transaction_start_date: if present, include only activities with a transaction on or after or after this date. Requires ISO format YYYY-MM-DD (e.g. "2018-12-01") (defaults to None).
+    @param transaction_end_date: if present, include only activities with a transaction on or before this date. Requires ISO format YYYY-MM-DD (e.g. "2019-11-30") (defaults to None).
     @param humanitarian_only: if True, include only IATI activities that contain a humanitarian marker (defaults to False).
     """
 
@@ -84,7 +90,7 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
                 events.expandNode(node)
 
                 # get the iati-identifier (for logging)
-                iati_id = get_iati_identifier(activity_node)
+                iati_id = get_identifier(node)
                 if iati_id is None:
                     logger.error("Skipping activity with no iati-identifier")
                     continue
@@ -98,6 +104,11 @@ def split(file_or_url, max, output_dir=".", output_stub=None, start_date=None, e
                 # filter out activities not in the date range (if requested)
                 if not check_dates_in_range(get_activity_dates(node), start_date, end_date):
                     logger.debug("Skipping activity %s (dates out of range)", iati_id)
+                    continue
+
+                # filter out activities without a transaction matching the filter provided (if any)
+                if not check_transaction_date_in_range(get_transaction_dates(node), transaction_type, transaction_start_date, transaction_end_date):
+                    logger.debug("Skipping activity %s (no matching transactions)", iati_id)
                     continue
 
                 # SUCCESS! if we make it to here, then we want to include the activity in our output
@@ -270,6 +281,7 @@ def check_transaction_date_in_range(transaction_dates, transaction_type=None, st
         for date in transaction_dates.get(type, []):
             if (start_date is None or date >= start_date) and (end_date is None or date <= end_date):
                 # return on the first match
+                print("MATCH!")
                 return True
 
     # if we get to here, then we failed
@@ -308,13 +320,13 @@ def get_transaction_dates(activity_node):
         if node:
             transaction_type = get_attribute(node, "code")
         else:
-            logger.error("Type missing for transaction in activity %s", get_iati_identifier(activity_node))
+            logger.error("Type missing for transaction in activity %s", get_identifier(activity_node))
             continue
         node = get_first_child(transaction_node, "transaction-date")
         if node:
             transaction_date = get_attribute(node, "iso-date")
         else:
-            logger.error("Date missing for transaction in activity %s", get_iati_identifier(activity_node))
+            logger.error("Date missing for transaction in activity %s", get_identifier(activity_node))
         if transaction_type in transaction_dates:
             transaction_dates[transaction_type].append(transaction_date)
         else:

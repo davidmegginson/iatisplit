@@ -1,3 +1,6 @@
+2019-01-03 Release 0.3
+	- add support for filtering by transaction
+
 2019-01-02 Release 0.2
 	- add support for opening URLs
 	- add requirements.txt

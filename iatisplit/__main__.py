@@ -58,6 +58,29 @@ def main(args):
         help="Include only activities in progress on or before this date."
     )
     parser.add_argument(
+        '--transaction-type',
+        required=False,
+        default=None,
+        metavar="<IATI transaction type",
+        help="Include only activities with a transaction of this type."
+    )
+    parser.add_argument(
+        '--transaction-start-date',
+        required=False,
+        default=None,
+        type=parse_date,
+        metavar="YYYY-MM-DD",
+        help="Include only activities in progress on or after this date."
+    )
+    parser.add_argument(
+        '--transaction-end-date',
+        required=False,
+        default=None,
+        type=parse_date,
+        metavar="YYYY-MM-DD",
+        help="Include only activities in progress on or before this date."
+    )
+    parser.add_argument(
         '--humanitarian-only', '-H',
         action='store_const',
         const=True,
@@ -99,7 +122,10 @@ def main(args):
         output_stub=result.output_stub,
         start_date=result.start_date,
         end_date=result.end_date,
-        humanitarian_only=result.humanitarian_only
+        humanitarian_only=result.humanitarian_only,
+        transaction_type=result.transaction_type,
+        transaction_start_date=result.transaction_start_date,
+        transaction_end_date=result.transaction_end_date
     )
 
 

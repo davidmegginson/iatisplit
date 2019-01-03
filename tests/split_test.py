@@ -23,7 +23,7 @@ class TestScript(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.output_directory)
 
-    def Xtest_open_file(self):
+    def test_open_file(self):
         filename = _resolve_path("iati-activities-Afghanistan.xml")
         args = [
             "-n", "200",
@@ -35,7 +35,7 @@ class TestScript(unittest.TestCase):
         self.assertTrue("iati-activities-Afghanistan.0010.xml" in os.listdir(self.output_directory))
         self.assertFalse("iati-activities-Afghanistan.0011.xml" in os.listdir(self.output_directory))
 
-    def Xtest_open_url(self):
+    def test_open_url(self):
         url = "https://github.com/davidmegginson/iatisplit/blob/master/tests/files/iati-activities-Afghanistan.xml?raw=true"
         args = [
             "-n", "200",
