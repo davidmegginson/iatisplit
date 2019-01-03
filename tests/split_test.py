@@ -141,6 +141,22 @@ class TestFunctions(unittest.TestCase):
         # in range with planned dates but not actual
         self.assertFalse(iatisplit.split.check_dates_in_range(DATES, "2017-07-01", "2018-06-30"))
 
+    def test_check_transaction_dates_in_range(self):
+        DATES = {
+            "1": ['2017-01-15'],
+            "2": ['2017-01-16', '2017-01-17'],
+            "3": ['2017-01-18']
+        }
+        self.assertTrue(iatisplit.split.check_transaction_date_in_range(DATES, None, None, None))
+
+        self.assertTrue(iatisplit.split.check_transaction_date_in_range(DATES, "1", "2017-01-01", "2017-02-01"))
+        self.assertFalse(iatisplit.split.check_transaction_date_in_range(DATES, "1", "2018-01-01", "2018-02-01"))
+
+        self.assertTrue(iatisplit.split.check_transaction_date_in_range(DATES, None, "2017-01-01", "2017-02-01"))
+        self.assertFalse(iatisplit.split.check_transaction_date_in_range(DATES, None, "2018-01-01", "2018-02-01"))
+
+        self.assertFalse(iatisplit.split.check_transaction_date_in_range(DATES, "10", "2017-01-01", "2017-02-01"))
+
 #
 # Utility functions
 #

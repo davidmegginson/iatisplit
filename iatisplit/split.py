@@ -230,19 +230,50 @@ def check_dates_in_range(activity_dates, start_date=None, end_date=None):
     """
     if start_date:
         if "end_actual" in activity_dates:
-            if activity_dates["end_actual"] <= start_date:
+            if start_date is None or activity_dates["end_actual"] <= start_date:
                 return False
         elif "end_planned" in activity_dates:
-            if activity_dates["end_planned"] <= start_date:
+            if start_date is None or activity_dates["end_planned"] <= start_date:
                 return False
     if end_date:
         if "start_actual" in activity_dates:
-            if activity_dates["start_actual"] >= end_date:
+            if end_date is None or activity_dates["start_actual"] >= end_date:
                 return False
         elif "start_planned" in activity_dates:
-            if activity_dates["start_planned"] >= end_date:
+            if end_date is None or activity_dates["start_planned"] >= end_date:
                 return False
     return True
+
+
+def check_transaction_date_in_range(transaction_dates, transaction_type=None, start_date=None, end_date=None):
+    """Check that an activity has at least one transaction in the specified date range.
+    If the transaction_type is provided, then only transactions of that type will be checked.
+    @param transaction_dates: the parsed transaction dates, keyed by type.
+    @param transaction_type: if provided, check only transactions of this type.
+    @param start_date: check for transactions on or after this date (if None, then always matches)
+    @param end_date: check for transactions before or on this date (if None, then always matches)
+    @returns: True if there is a transaction in the specified range.
+    """
+    # shortcut if no filters specified
+    if transaction_type is None and start_date is None and end_date is None:
+        return True
+
+    # if there's a specific type, use it; otherwise, use all types
+    if transaction_type:
+        types = [transaction_type]
+    else:
+        types = transaction_dates.keys()
+
+    # get the list of dates for each type
+    for type in types:
+        # check each date
+        for date in transaction_dates.get(type, []):
+            if (start_date is None or date >= start_date) and (end_date is None or date <= end_date):
+                # return on the first match
+                return True
+
+    # if we get to here, then we failed
+    return False
 
 
 def get_activity_dates(activity_node):
