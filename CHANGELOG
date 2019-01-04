@@ -1,4 +1,5 @@
 2019-01-04 Release 0.4
+	- add --version option to script
 	- fix missing import in command-line script
 
 2019-01-03 Release 0.3

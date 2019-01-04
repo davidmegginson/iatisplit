@@ -281,7 +281,6 @@ def check_transaction_date_in_range(transaction_dates, transaction_type=None, st
         for date in transaction_dates.get(type, []):
             if (start_date is None or date >= start_date) and (end_date is None or date <= end_date):
                 # return on the first match
-                print("MATCH!")
                 return True
 
     # if we get to here, then we failed

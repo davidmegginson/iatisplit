@@ -1,4 +1,5 @@
 from iatisplit.split import split
+from iatisplit.version import __version__
 import re, sys, argparse, logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,11 @@ def main(args):
             raise Exception("Bad date format: {}".format(s))
 
     parser = argparse.ArgumentParser(description="Split IATI activity files.")
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='%(prog)s {version}'.format(version=__version__)
+    )
     parser.add_argument(
         '--max-activities', '-n',
         required=True,

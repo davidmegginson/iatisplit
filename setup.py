@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from setuptools import setup
+from iatisplit.version import __version__
 import sys
 
 if sys.version_info < (3,):
@@ -8,7 +9,7 @@ if sys.version_info < (3,):
 
 setup(
     name='iatisplit',
-    version="0.4",
+    version=__version__,
     description='Split International Aid Transparency Initiative (IATI) XML activity files.',
     long_description="""Parsing very-large XML files into an in-memory DOM can cause a memory-usage
 explosion that shuts down even a large server. This streaming library is optimised to handle very 
