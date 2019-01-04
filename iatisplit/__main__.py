@@ -1,5 +1,5 @@
 from iatisplit.split import split
-import sys, argparse, logging
+import re, sys, argparse, logging
 
 logger = logging.getLogger(__name__)
 """Logger for this module"""

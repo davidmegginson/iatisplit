@@ -1,3 +1,6 @@
+2019-01-04 Release 0.4
+	- fix missing import in command-line script
+
 2019-01-03 Release 0.3
 	- add support for filtering by transaction
 

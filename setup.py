@@ -8,7 +8,7 @@ if sys.version_info < (3,):
 
 setup(
     name='iatisplit',
-    version="0.3",
+    version="0.4",
     description='Split International Aid Transparency Initiative (IATI) XML activity files.',
     long_description="""Parsing very-large XML files into an in-memory DOM can cause a memory-usage
 explosion that shuts down even a large server. This streaming library is optimised to handle very 
