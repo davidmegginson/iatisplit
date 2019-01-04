@@ -14,50 +14,53 @@ $ iatisplit -n 100 input-data.xml
 
 The only required option is --max-activities / -n.
 
---max-activities _num_ / -n _num_
-
+``--max-activities NUMBER``
+``-n NUMBER``
 Required. Maximum number of IATI activities to include in each output file.
   
---output-directory _dir_ / -d _dir_
-
+``--output-directory DIRECTORY``
+``-d DIRECTORY``
 Output directory for split IATI documents (defaults to ".", which may fail on non-Unix systems). The directory must already exist. iatisplit will overwrite existing files in the directory.
   
---output-stub _filename_ / -o _filename_
-
+``--output-stub FILENAME``
+``-o FILENAME``
 Base filename for all output files (tries to guess from filename/URL if not provided)
   
---start-date _YYYY-MM-DD_ / -s _YYYY-MM-DD_
-
+``--start-date YYYY-MM-DD``
+``-s YYYY-MM-DD``
 Include only IATI activities that start on or after this date. Uses the actual start date if present, then falls back to the planned start date.
   
---end-date _YYYY-MM-DD_ / - e _YYYY-MM-DD_
-
+``--end-date YYYY-MM-DD``
+``- e YYYY-MM-DD``
 Include only IATI activities that end on or before this date. Uses the actual end date if present, then falls back to the planned end date.
   
---humanitarian-only / -h
-
+``--humanitarian-only``
+``-H``
 Include only IATI activities with the humanitarian marker on the activity or one of its transactions (IATI 2.02 and above).
   
---transaction-type _type_
+``--transaction-type TYPE``
+Include only activities with at least one transaction of the specified
+type.
 
-Include only activities with at least one transaction of the specified type.
-
---transaction-start-date _YYYY-MM-DD_
-
+``--transaction-start-date YYYY-MM-DD``
 Include only activities with at least one transaction on or after the specified date.
 
---transaction-end-date _YYYY-MM-DD_
-
+``--transaction-end-date YYYY-MM-DD``
 Include only activities with at least one transaction before or on the specified date.
 
---verbose
-
+``--verbose``
 Include a lot of debugging information about processing.
   
---quiet
-
+``--quiet``
 Print only error messages.
   
+``--version``
+Print program version and exit.
+
+``--help``
+``-h``
+Print usage information and exit.
+
 
 ## Output
 
@@ -83,14 +86,17 @@ def split(
   output_stub=None, 
   start_date=None, 
   end_date=None, 
-  humanitarian_only=False
+  humanitarian_only=False,
+  transaction_type=None,
+  transaction_start_date=None,
+  transaction_end_date=None
 )
 ```
 
 
 ## Requirements
 
-Requires Python3.
+Requires Python3 and the requests library. See requirements.txt setup.py. (The ``pip`` utility will install requirements automatically.)
 
 
 ## Installation
@@ -130,4 +136,3 @@ Please report bugs or feature requests at https://github.com/davidmegginson/iati
 ## Author and license
 
 This code was started by David Megginson, and is released into the Public Domain with no warranty of any kind. See UNLICENSE.md for details.
-
